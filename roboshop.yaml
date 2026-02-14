@@ -32,7 +32,19 @@
         Name: "{{ item }}-{{ env }}"
       wait: true
     loop: "{{ instances }}"
-    register: ec2_output
+    when: operation == "create"
+
+  ########################################
+  # FETCH INSTANCE DETAILS (RELIABLE IP)
+  ########################################
+
+  - name: Fetch EC2 instance details
+    amazon.aws.ec2_instance_info:
+      filters:
+        "tag:Name": "{{ item }}-{{ env }}"
+        "instance-state-name": "running"
+    loop: "{{ instances }}"
+    register: ec2_info
     when: operation == "create"
 
   ########################################
@@ -46,11 +58,9 @@
       record: "{{ item.item }}-{{ env }}.{{ domain_name }}"
       type: A
       ttl: 1
-      value: >-
-        {{ item.instances[0].private_ip_address
-           | default(item.instances[0].network_interfaces[0].private_ip_address) }}
+      value: "{{ item.instances[0].private_ip_address }}"
       overwrite: true
-    loop: "{{ ec2_output.results }}"
+    loop: "{{ ec2_info.results }}"
     when: operation == "create"
 
   ########################################
@@ -64,11 +74,9 @@
       record: "roboshop-{{ env }}.{{ domain_name }}"
       type: A
       ttl: 1
-      value: >-
-        {{ item.instances[0].public_ip_address
-           | default(item.instances[0].network_interfaces[0].association.public_ip) }}
+      value: "{{ item.instances[0].public_ip_address }}"
       overwrite: true
-    loop: "{{ ec2_output.results }}"
+    loop: "{{ ec2_info.results }}"
     when:
       - operation == "create"
       - item.item == "frontend"
