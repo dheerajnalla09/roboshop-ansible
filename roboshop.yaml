@@ -6,7 +6,6 @@
     ami_id: ami-0220d79f3f480ecf5
     domain_name: dheerajn.online
     env: dev
-    action: create
     instances:
     - mongodb
     - catalogue
@@ -24,9 +23,7 @@
         Name: "{{ item }}-{{ env }}"
     loop: "{{ instances }}"
     register: ec2_output
-    when: action == "create"
 
   - name: print the output
     ansible.builtin.debug:
       msg: "{{ ec2_output }}"
-    when: action == "create"
