@@ -3,7 +3,7 @@
   hosts: all
   connection: local
   vars:
-    sg_id: ssg-01cd59b2cef19195c
+    sg_id: sg-01cd59b2cef19195c
     ami_id: ami-0220d79f3f480ecf5
     domain_name: dheerajn.online
     env: dev
