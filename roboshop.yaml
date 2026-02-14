@@ -35,11 +35,6 @@
     register: ec2_output
     when: operation == "create"
 
-  - name: Debug EC2 Output
-    ansible.builtin.debug:
-      var: ec2_output
-    when: operation == "create"
-
   ########################################
   # CREATE ROUTE53 RECORDS (PRIVATE IP)
   ########################################
@@ -51,7 +46,9 @@
       record: "{{ item.item }}-{{ env }}.{{ domain_name }}"
       type: A
       ttl: 1
-      value: "{{ item.instances[0].private_ip_address }}"
+      value: >-
+        {{ item.instances[0].private_ip_address
+           | default(item.instances[0].network_interfaces[0].private_ip_address) }}
       overwrite: true
     loop: "{{ ec2_output.results }}"
     when: operation == "create"
@@ -67,7 +64,9 @@
       record: "roboshop-{{ env }}.{{ domain_name }}"
       type: A
       ttl: 1
-      value: "{{ item.instances[0].public_ip_address }}"
+      value: >-
+        {{ item.instances[0].public_ip_address
+           | default(item.instances[0].network_interfaces[0].association.public_ip) }}
       overwrite: true
     loop: "{{ ec2_output.results }}"
     when:
